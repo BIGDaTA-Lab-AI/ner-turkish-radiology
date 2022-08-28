@@ -2,8 +2,8 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import SGD, Adam
-from dataset import DataSequence
-from bert_ner_classifier import BertModel
+from models.dataset import DataSequence
+from models.bert_ner_classifier import BertModel
 import numpy as np
 from tqdm import tqdm
 
@@ -121,12 +121,13 @@ def evaluate(model, df_test):
 
 
 if __name__ == "__main__":
-    df = pd.read_csv('data/sequence_labelling/radgraph_train.csv')
-    # df_train = pd.read_csv('data/sequence_labelling/radgraph_train.csv')
-    # df_test = pd.read_csv('data/sequence_labelling/radgraph_test.csv')
-    # df_val = pd.read_csv('data/sequence_labelling/radgraph_dev.csv')
-    df_train, df_val, df_test = np.split(df.sample(frac=1, random_state=42), [int(.8 * len(df)), int(.9 * len(df))])
-    model = BertModel()
-    # train_loop(model, df_train, df_val)
+    # df = pd.read_csv('data/sequence_labelling/radgraph_train.csv')
+    # df_train, df_val, df_test = np.split(df.sample(frac=1, random_state=42), [int(.8 * len(df)), int(.9 * len(df))])
+    df_train = pd.read_csv('data/sequence_labelling/radgraph_train.csv')
+    df_test = pd.read_csv('data/sequence_labelling/radgraph_test.csv')
+    df_val = pd.read_csv('data/sequence_labelling/radgraph_dev.csv')
 
+    model = BertModel()
+
+    # train_loop(model, df_train, df_val)
     evaluate(model, df_test)
