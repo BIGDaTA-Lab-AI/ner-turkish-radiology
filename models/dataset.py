@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 from transformers import BertTokenizerFast
 
 tokenizer = BertTokenizerFast.from_pretrained('pretrained_models/biobert_cased_v1.2')
@@ -26,7 +25,6 @@ def align_label(texts, labels):
     for word_idx in word_ids:
         if word_idx is None:
             label_ids.append(-100)
-
         elif word_idx != previous_word_idx:
             try:
                 label_ids.append(labels_to_ids[labels[word_idx]])
@@ -40,13 +38,13 @@ def align_label(texts, labels):
         previous_word_idx = word_idx
     return label_ids
 
-class DataSequence(torch.utils.data.Dataset):
 
+class DataSequence(torch.utils.data.Dataset):
     def __init__(self, df):
         lb = [i.split() for i in df['labels'].values.tolist()]
         txt = df['sequence'].values.tolist()
-        self.texts = [tokenizer(str(i), padding='max_length', max_length = 512, truncation=True, return_tensors="pt") for i in txt]
-        self.labels = [align_label(i,j) for i,j in zip(txt, lb)]
+        self.texts = [tokenizer(str(i), padding='max_length', max_length=512, truncation=True, return_tensors="pt") for i in txt]
+        self.labels = [align_label(i, j) for i, j in zip(txt, lb)]
 
     def __len__(self):
         return len(self.labels)

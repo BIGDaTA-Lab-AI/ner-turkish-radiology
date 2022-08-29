@@ -1,3 +1,4 @@
 .idea/
 venv/
 pretrained_models/
+__pycache__/

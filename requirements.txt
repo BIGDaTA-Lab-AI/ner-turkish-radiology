@@ -1,6 +1,9 @@
 transformers
 torch
+torchaudio
+torchvision
 numpy
 pandas
 matplotlib
 tqdm
+fire
