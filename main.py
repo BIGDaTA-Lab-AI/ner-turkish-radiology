@@ -7,7 +7,12 @@ from models.bert_ner_classifier import BertModel
 from utils import load_model, save_model
 from tqdm import tqdm
 import fire
+import os
+from transformers import logging
 
+
+logging.set_verbosity_error()
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 LEARNING_RATE = 5e-3
 EPOCHS = 5
 BATCH_SIZE = 2

@@ -2,3 +2,4 @@
 venv/
 pretrained_models/
 __pycache__/
+model_checkpoint/
