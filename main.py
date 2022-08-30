@@ -8,14 +8,26 @@ from utils import load_model, save_model
 from tqdm import tqdm
 import fire
 import os
-from transformers import logging
+from transformers import logging, BertTokenizerFast
 
 
+tokenizer = BertTokenizerFast.from_pretrained('pretrained_models/biobert_cased_v1.2')
 logging.set_verbosity_error()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 LEARNING_RATE = 2e-5
 EPOCHS = 10
 BATCH_SIZE = 8
+ids_to_labels = {
+    0: 'O',
+    1: 'B-ANAT-DP',
+    2: 'I-ANAT-DP',
+    3: 'B-OBS-DP',
+    4: 'I-OBS-DP',
+    5: 'B-OBS-DA',
+    6: 'I-OBS-DA',
+    7: 'B-OBS-U',
+    8: 'I-OBS-U',
+}
 
 
 def train(model=BertModel()):
@@ -112,6 +124,52 @@ def evaluate(model=BertModel()):
 
     val_accuracy = total_acc_test / len(df_test)
     print(f'Test Accuracy: {val_accuracy: .3f}')
+
+
+def align_word_ids(texts):
+    label_all_tokens = True
+    tokenized_inputs = tokenizer(texts, padding='max_length', max_length=512, truncation=True)
+    word_ids = tokenized_inputs.word_ids()
+    previous_word_idx = None
+    label_ids = []
+
+    for word_idx in word_ids:
+        if word_idx is None:
+            label_ids.append(-100)
+        elif word_idx != previous_word_idx:
+            try:
+                label_ids.append(1)
+            except:
+                label_ids.append(-100)
+        else:
+            try:
+                label_ids.append(1 if label_all_tokens else -100)
+            except:
+                label_ids.append(-100)
+        previous_word_idx = word_idx
+    return label_ids
+
+
+def evaluate_one_text(model=BertModel(), sentence="Increased right lower lobe capacity, concerning for infection"):
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
+    model = load_model(model)
+    if use_cuda:
+        model = model.cuda()
+    model.eval()
+    text = tokenizer(sentence, padding='max_length', max_length = 512, truncation=True, return_tensors="pt")
+
+    mask = text['attention_mask'].to(device)
+    input_id = text['input_ids'].to(device)
+    label_ids = torch.Tensor(align_word_ids(sentence)).unsqueeze(0).to(device)
+
+    logits = model(input_id, mask, None)
+    logits_clean = logits[0][label_ids != -100]
+
+    predictions = logits_clean.argmax(dim=1).tolist()
+    prediction_label = [ids_to_labels[i] for i in predictions]
+    print(sentence)
+    print(prediction_label)
 
 
 if __name__ == "__main__":
