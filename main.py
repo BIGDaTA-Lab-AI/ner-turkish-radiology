@@ -13,9 +13,9 @@ from transformers import logging
 
 logging.set_verbosity_error()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-LEARNING_RATE = 5e-3
-EPOCHS = 5
-BATCH_SIZE = 2
+LEARNING_RATE = 2e-5
+EPOCHS = 10
+BATCH_SIZE = 8
 
 
 def train(model=BertModel()):
@@ -28,7 +28,7 @@ def train(model=BertModel()):
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
-    optimizer = SGD(model.parameters(), lr=LEARNING_RATE)
+    optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
     if use_cuda:
         model = model.cuda()
     model.train()

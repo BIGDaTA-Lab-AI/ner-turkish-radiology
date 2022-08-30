@@ -1,5 +1,5 @@
-from transformers import BertForTokenClassification
-import torch
+from transformers import BertForSequenceClassification
+from torch import nn
 
 unique_labels = [
     'O',
@@ -14,10 +14,10 @@ unique_labels = [
 ]
 
 
-class BertModel(torch.nn.Module):
-    def __init__(self):
+class BertModel(nn.Module):
+    def __init__(self, dropout=0.5):
         super(BertModel, self).__init__()
-        self.bert = BertForTokenClassification.from_pretrained('pretrained_models/biobert_cased_v1.2', num_labels=len(unique_labels))
+        self.bert = BertForSequenceClassification.from_pretrained('pretrained_models/biobert_cased_v1.2', num_labels=len(unique_labels), dropout=dropout)
 
     def forward(self, input_id, mask, label):
         output = self.bert(input_ids=input_id, attention_mask=mask, labels=label, return_dict=False)
