@@ -18,7 +18,7 @@
 
 ## Download Pretrained Models
 ### Biobert Base Cased v1.2
-- `curl --remote-name-all https://huggingface.co/dmis-lab/biobert-base-cased-v1.2/resolve/main/config.json https://huggingface.co/dmis-lab/biobert-base-cased-v1.2/resolve/main/pytorch_model.bin https://huggingface.co/dmis-lab/biobert-base-cased-v1.2/resolve/main/vocab.txt --output-dir "pretrained_models/biobert_cased_v1.2`
+- `curl --remote-name-all https://huggingface.co/dmis-lab/biobert-base-cased-v1.2/resolve/main/config.json https://huggingface.co/dmis-lab/biobert-base-cased-v1.2/resolve/main/pytorch_model.bin https://huggingface.co/dmis-lab/biobert-base-cased-v1.2/resolve/main/vocab.txt --output-dir "pretrained_models/biobert_cased_v1.2"`
 
 ## Virtual Environment and Requirements Installation
 - If no virtual environment (venv), create it: `python3 -m venv venv`
