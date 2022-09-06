@@ -3,4 +3,4 @@ venv/
 pretrained_models/
 __pycache__/
 model_checkpoint/
-**/MIMIC-CXR_graphs.*
+data/
