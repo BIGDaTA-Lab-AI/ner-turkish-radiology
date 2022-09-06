@@ -1,7 +1,7 @@
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from torch.optim import SGD, Adam
+from torch.optim import Adam
 from models.dataset import DataSequence
 from models.bert_ner_classifier import BertModel
 from utils import load_model, save_model
@@ -15,7 +15,7 @@ tokenizer = BertTokenizerFast.from_pretrained('pretrained_models/biobert_cased_v
 logging.set_verbosity_error()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 LEARNING_RATE = 2e-5
-EPOCHS = 10
+EPOCHS = 16
 BATCH_SIZE = 8
 ids_to_labels = {
     0: 'O',
@@ -31,8 +31,8 @@ ids_to_labels = {
 
 
 def train(model=BertModel()):
-    df_train = pd.read_csv('data/sequence_labelling/radgraph_train.csv')
-    df_val = pd.read_csv('data/sequence_labelling/radgraph_dev.csv')
+    df_train = pd.read_csv('data/train.csv')
+    df_val = pd.read_csv('data/dev.csv')
     train_dataset = DataSequence(df_train)
     val_dataset = DataSequence(df_val)
     train_dataloader = DataLoader(train_dataset, num_workers=4, batch_size=BATCH_SIZE, shuffle=True)
@@ -43,21 +43,19 @@ def train(model=BertModel()):
     optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
     if use_cuda:
         model = model.cuda()
-    model.train()
 
-    worst_acc = 0
+    best_accuracy = 0
     worst_loss = 1000
-    for epoch_num in range(EPOCHS):
+    for epoch_num in range(1, EPOCHS+1):
         total_acc_train = 0
         total_loss_train = 0
-
+        model.train()
         for train_data, train_label in tqdm(train_dataloader):
             train_label = train_label.to(device)
             mask = train_data['attention_mask'].squeeze(1).to(device)
             input_id = train_data['input_ids'].squeeze(1).to(device)
             optimizer.zero_grad()
             loss, logits = model(input_id, mask, train_label)
-
             for i in range(logits.shape[0]):
                 logits_clean = logits[i][train_label[i] != -100]
                 label_clean = train_label[i][train_label[i] != -100]
@@ -76,7 +74,6 @@ def train(model=BertModel()):
             mask = val_data['attention_mask'].squeeze(1).to(device)
             input_id = val_data['input_ids'].squeeze(1).to(device)
             loss, logits = model(input_id, mask, val_label)
-
             for i in range(logits.shape[0]):
                 logits_clean = logits[i][val_label[i] != -100]
                 label_clean = val_label[i][val_label[i] != -100]
@@ -89,15 +86,17 @@ def train(model=BertModel()):
         train_accuracy = total_acc_train / len(df_train)
         val_accuracy = total_acc_val / len(df_val)
         val_loss = total_loss_val / len(df_val)
+        is_best_accuracy = False if val_accuracy.item() < best_accuracy else True
+        best_accuracy = best_accuracy if val_accuracy.item() < best_accuracy else val_accuracy.item()
 
         if val_loss < worst_loss:
-            save_model(model, epoch_num)
+            save_model(model, epoch_num, is_best_accuracy)
 
         print(f'Epoch: {epoch_num} | Train_Loss: {train_loss: .3f} | Train_Accuracy: {train_accuracy: .3f} | Val_Loss: {val_loss: .3f} | Val_Accuracy: {val_accuracy: .3f}')
 
 
 def evaluate(model=BertModel()):
-    df_test = pd.read_csv('data/sequence_labelling/radgraph_test.csv')
+    df_test = pd.read_csv('data/test.csv')
     test_dataset = DataSequence(df_test)
     test_dataloader = DataLoader(test_dataset, num_workers=4, batch_size=1)
     model = load_model(model)
